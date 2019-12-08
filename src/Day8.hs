@@ -9,11 +9,7 @@ parseInt :: Char -> Int
 parseInt char = read [char] :: Int
 
 parseStr :: String -> [Int]
-parseStr str = go str []
-  where
-    go :: String -> [Int] -> [Int]
-    go (x : xs) out = go xs (parseInt x : out)
-    go []       out = reverse out
+parseStr = map parseInt
 
 group :: Int -> [a] -> [[a]]
 group _ [] = []
