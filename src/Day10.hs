@@ -1,6 +1,8 @@
 module Day10 where
 
-import           Data.List                      ( sort )
+import           Data.List                      ( delete
+                                                , sort
+                                                )
 
 splitOn :: Char -> String -> [String]
 splitOn char s =
@@ -21,25 +23,16 @@ linesToCoords lines = go lines 0
 
 takeOut index list = (list !! index, take index list <> drop (index + 1) list)
 
-processCoords coords = go coords 0
+processCoords coords = go coords
   where
-    go coords index
-        | index < length coords
-        = let (element, remainder) = takeOut index coords
-          in  (processCoord element remainder) : go coords (index + 1)
-        | otherwise
-        = []
+    go []       = []
+    go (x : xs) = processCoord x (delete x coords) : go xs
 
-processCoord coord surroundings = (coord, go coord surroundings 0)
+processCoord coord surroundings = (coord, go surroundings)
   where
-    go coord surroundings index
-        | index < length surroundings
-        = let (element, remainder) = takeOut index surroundings
-              canSee               = (processPair coord element remainder)
-              recurse              = go coord surroundings (index + 1)
-          in  if canSee then element : recurse else recurse
-        | otherwise
-        = []
+    go [] = []
+    go (x : xs) =
+        if processPair coord x (delete x surroundings) then x : go xs else go xs
 
 distance :: (Double, Double) -> (Double, Double) -> Double
 distance (x1, y1) (x2, y2) = sqrt (((x2 - x1) ** 2) + ((y2 - y1) ** 2))
@@ -62,8 +55,6 @@ best (x : xs) = go xs x
 
 process str =
     let lines         = splitOn '\n' str
-        width         = length $ head lines
-        height        = length lines
         coords        = linesToCoords lines
         result        = processCoords coords
         (coord, list) = best result
