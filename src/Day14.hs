@@ -134,23 +134,32 @@ getInputs outputChemical reactions =
     in
         (chemLeft, inputs')
 
-part1 puzzleInput =
-    let puzzle = parsePuzzle puzzleInput in getFuel (Chemical 1 "FUEL") puzzle
+part1 puzzleInput = getFuel (Chemical 1 "FUEL") (parsePuzzle puzzleInput)
 
-part2 puzzleInput = go 4436970 0 -- Magic number done by eye
+part2 puzzleInput = step
   where
     puzzle = parsePuzzle puzzleInput
-    go num prev =
-        let (ore, spares) = getFuel (Chemical num "FUEL") puzzle
-        in  do
-                print (ore, num)
-                if ore < 1000000000000
-                    then go (num + 1) ore
-                    else print ("Ore consumed", prev, "Answer", num - 1)
+    getOre' fuel = fst $ getFuel (Chemical fuel "FUEL") puzzle
+    oreTarget = 1000000000000
+    findBounds prevBound =
+        let nextBound = prevBound * 10
+        in  if getOre' nextBound > oreTarget
+                then (prevBound, nextBound)
+                else findBounds nextBound
+    bounds = findBounds 1
+    bisect low high =
+        let middleIn  = low + ((high - low) `div` 2)
+            middleOut = getOre' middleIn
+            delta     = oreTarget - middleOut
+        in  if high - low == 1
+                then low
+                else if delta < 0
+                    then bisect low middleIn
+                    else bisect middleIn high
+    step = uncurry bisect bounds
 
 main :: IO ()
 main = do
     inpStr <- readFile "./input/Day14.txt"
     print $ fst $ part1 inpStr
-    part2 inpStr
-    print "Done"
+    print $ part2 inpStr
